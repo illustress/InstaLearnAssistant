@@ -1,0 +1,5 @@
+{
+  "name": "Gemini Firefox Assistant",
+  "description": "A lightweight Firefox extension popup powered by Google Gemini for quick summarization, Q&A, and assistance.",
+  "requestFramePermissions": []
+}
