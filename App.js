@@ -1,142 +1,154 @@
 import { React } from './deps.js';
-const { useState, useRef, useEffect } = React;
+const { useState, useEffect, useCallback, useRef } = React;
 import { html } from './utils.js';
-import { sendMessageStream, resetChatSession } from './services/geminiService.js';
-import { MessageItem } from './components/MessageItem.js';
-import { InputArea } from './components/InputArea.js';
-import { Sparkles, Trash2 } from 'https://esm.sh/lucide-react@0.263.1?deps=react@18.2.0';
+import { DEFAULT_WORDS } from './words.js';
+import { loadLearningData, saveProgress } from './services/learningService.js';
+import { LearningView } from './components/LearningView.js';
+import { ChatView } from './components/ChatView.js';
+import { WordManager } from './components/WordManager.js';
+import { StatsView } from './components/StatsView.js';
+import { SettingsView } from './components/SettingsView.js';
+import { BookOpen } from 'https://esm.sh/lucide-react@0.263.1?deps=react@18.2.0';
+
+const TABS = [
+  { id: 'learn', icon: '📚', label: 'Learn' },
+  { id: 'words', icon: '📖', label: 'Words' },
+  { id: 'stats', icon: '📊', label: 'Stats' },
+  { id: 'chat',  icon: '💬', label: 'Chat' },
+  { id: 'settings', icon: '⚙️', label: '' },
+];
 
 const App = () => {
-  const [messages, setMessages] = useState([
-    {
-      id: 'welcome',
-      role: 'model',
-      text: "Hello! I'm your Gemini extension assistant. How can I help you browse today?",
-      timestamp: Date.now()
-    }
-  ]);
-  const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef(null);
+  const [tab, setTab] = useState('learn');
+  const [words, setWords] = useState(DEFAULT_WORDS);
+  const [wordProgress, setWordProgress] = useState({});
+  const [credits, setCredits] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [direction, setDirection] = useState('german-to-dutch');
+  const [correctAction, setCorrectAction] = useState('next');
+  const [loaded, setLoaded] = useState(false);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  // Refs for stable callback
+  const stateRef = useRef({ wordProgress, credits, streak });
+  useEffect(() => { stateRef.current = { wordProgress, credits, streak }; });
 
+  // Load persisted data on mount
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    loadLearningData().then(data => {
+      setWords(data.words);
+      setWordProgress(data.wordProgress);
+      setCredits(data.credits);
+      setStreak(data.streak);
+      setDirection(data.direction);
+      setCorrectAction(data.correctAction);
+      setLoaded(true);
+    });
+  }, []);
 
-  const handleSend = async (text) => {
-    const userMsgId = Date.now().toString();
-    const userMessage = {
-      id: userMsgId,
-      role: 'user',
-      text: text,
-      timestamp: Date.now()
-    };
+  // Stable update handler (uses refs so it never changes)
+  const handleUpdateState = useCallback((updates) => {
+    const cur = stateRef.current;
+    const newWP = updates.wordProgress !== undefined ? updates.wordProgress : cur.wordProgress;
+    const newCredits = updates.credits !== undefined ? updates.credits : cur.credits;
+    const newStreak = updates.streak !== undefined ? updates.streak : cur.streak;
 
-    setMessages(prev => [...prev, userMessage]);
-    setIsLoading(true);
+    if (updates.wordProgress !== undefined) setWordProgress(updates.wordProgress);
+    if (updates.credits !== undefined) setCredits(updates.credits);
+    if (updates.streak !== undefined) setStreak(updates.streak);
 
-    const botMsgId = (Date.now() + 1).toString();
-    const botMessagePlaceholder = {
-      id: botMsgId,
-      role: 'model',
-      text: '', 
-      timestamp: Date.now()
-    };
-    
-    setMessages(prev => [...prev, botMessagePlaceholder]);
+    saveProgress(newWP, newCredits, newStreak);
+  }, []);
 
-    try {
-      let accumulatedText = '';
-      
-      await sendMessageStream(text, (chunk) => {
-        accumulatedText += chunk;
-        setMessages(prev => 
-          prev.map(msg => 
-            msg.id === botMsgId 
-              ? { ...msg, text: accumulatedText }
-              : msg
-          )
-        );
-      });
-      
-    } catch (error) {
-      console.error("Chat error:", error);
-      setMessages(prev => 
-        prev.map(msg => 
-          msg.id === botMsgId 
-            ? { ...msg, text: "Sorry, I encountered an error connecting to Gemini. Check your API Key.", isError: true }
-            : msg
-        )
-      );
-    } finally {
-      setIsLoading(false);
+  const handleWordsChange = useCallback((newWords, opts) => {
+    setWords(newWords || DEFAULT_WORDS);
+    if (opts?.resetProgress) {
+      setWordProgress({});
+      setCredits(0);
+      setStreak(0);
+      saveProgress({}, 0, 0);
     }
-  };
+  }, []);
 
-  const handleClearChat = () => {
-    setMessages([
-        {
-        id: Date.now().toString(),
-        role: 'model',
-        text: "Chat cleared. What else can I do for you?",
-        timestamp: Date.now()
-      }
-    ]);
-    resetChatSession();
-  };
+  const handleSettingsUpdate = useCallback((dir, action, opts) => {
+    setDirection(dir);
+    setCorrectAction(action);
+    if (opts?.resetProgress) {
+      setWordProgress({});
+      setCredits(0);
+      setStreak(0);
+    }
+  }, []);
 
-  const isThinking = isLoading && messages[messages.length - 1].text === '';
-
-  // Check for API Key presence visually
-  const hasApiKey = window.process?.env?.API_KEY && window.process.env.API_KEY !== "YOUR_API_KEY_HERE";
+  if (!loaded) {
+    return html`<div className="app-container"><div className="il-loading">Loading InstaLearning...</div></div>`;
+  }
 
   return html`
     <div className="app-container">
       <header>
         <div className="header-title">
           <div className="logo-box">
-            <${Sparkles} size=${18} color="white" />
+            <${BookOpen} size=${18} color="white" />
           </div>
-          <span>Gemini</span>
+          <span>InstaLearning</span>
         </div>
-        <button 
-          onClick=${handleClearChat}
-          className="icon-btn"
-          title="Clear Chat"
-        >
-          <${Trash2} size=${16} />
-        </button>
+        <div className="header-stats">
+          <span className="header-credit">💰 ${credits}</span>
+          <span className="header-streak">🔥 ${streak}</span>
+        </div>
       </header>
 
-      <main>
-        ${!hasApiKey && html`
-          <div style=${{padding: '10px', background: '#450a0a', color: '#fca5a5', fontSize: '12px', textAlign: 'center'}}>
-            Warning: API Key not configured in polyfill.js
-          </div>
-        `}
-        ${messages.map((msg) => html`<${MessageItem} key=${msg.id} message=${msg} />`)}
-        
-        ${isThinking && html`
-           <div className="message-row model">
-             <div className="message-content">
-               <div className="avatar model" style=${{opacity: 0.7}}>
-                  <${Sparkles} size=${16} />
-               </div>
-               <div className="loading-dots">
-                 <div className="dot"></div>
-                 <div className="dot"></div>
-                 <div className="dot"></div>
-               </div>
-             </div>
-           </div>
-        `}
-        <div ref=${messagesEndRef} />
-      </main>
+      <nav className="tab-bar">
+        ${TABS.map(t => html`
+          <button key=${t.id}
+            className=${`tab-btn ${tab === t.id ? 'active' : ''}`}
+            onClick=${() => setTab(t.id)}>
+            <span className="tab-icon">${t.icon}</span>
+            ${t.label ? html`<span className="tab-label">${t.label}</span>` : null}
+          </button>
+        `)}
+      </nav>
 
-      <${InputArea} onSend=${handleSend} isLoading=${isLoading} />
+      <main>
+        ${tab === 'learn' ? html`
+          <div className="tab-content">
+            <${LearningView}
+              words=${words} wordProgress=${wordProgress}
+              credits=${credits} streak=${streak} direction=${direction}
+              correctAction=${correctAction}
+              onUpdateState=${handleUpdateState} />
+          </div>
+        ` : null}
+
+        ${tab === 'words' ? html`
+          <div className="tab-content">
+            <${WordManager}
+              words=${words} wordProgress=${wordProgress}
+              onWordsChange=${handleWordsChange} />
+          </div>
+        ` : null}
+
+        ${tab === 'stats' ? html`
+          <div className="tab-content">
+            <${StatsView}
+              credits=${credits} streak=${streak}
+              wordProgress=${wordProgress} words=${words} />
+          </div>
+        ` : null}
+
+        <div className="tab-content" style=${{ display: tab === 'chat' ? 'flex' : 'none', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+          <${ChatView} />
+        </div>
+
+        ${tab === 'settings' ? html`
+          <div className="tab-content">
+            <${SettingsView}
+              direction=${direction} correctAction=${correctAction}
+              credits=${credits} streak=${streak} wordProgress=${wordProgress}
+              onUpdate=${handleSettingsUpdate} />
+          </div>
+        ` : null}
+      </main>
     </div>
   `;
 };

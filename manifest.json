@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
-  "name": "Gemini Assistant",
-  "version": "1.0.7",
-  "description": "Your AI assistant in the browser.",
+  "name": "InstaLearning",
+  "version": "2.0.0",
+  "description": "Learn German-Dutch vocabulary with quizzes, mini-games, and AI assistance.",
   "permissions": [
     "activeTab",
     "storage",
@@ -14,8 +14,16 @@
   ],
   "browser_action": {
     "default_popup": "index.html",
-    "default_title": "Open Gemini Assistant"
+    "default_title": "Open InstaLearning"
   },
+  "content_scripts": [
+    {
+      "matches": ["*://*.instagram.com/*"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ],
   "content_security_policy": "script-src 'self' 'unsafe-eval' https://esm.sh https://*.esm.sh https://cdn.jsdelivr.net https://ga.jspm.io https://unpkg.com; object-src 'self'; connect-src 'self' https://generativelanguage.googleapis.com https://*.googleapis.com https://esm.sh https://*.esm.sh https://cdn.jsdelivr.net https://ga.jspm.io https://unpkg.com",
   "browser_specific_settings": {
     "gecko": {
