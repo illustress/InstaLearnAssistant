@@ -1,16 +1,21 @@
 {
-  "manifest_version": 3,
+  "manifest_version": 2,
   "name": "InstaLearning",
   "version": "2.0.0",
   "description": "Learn German-Dutch vocabulary with quizzes, mini-games, and AI assistance.",
-  "permissions": ["activeTab", "storage"],
-  "host_permissions": [
+  "permissions": [
+    "activeTab",
+    "storage",
     "https://generativelanguage.googleapis.com/*",
     "https://*.googleapis.com/*",
     "https://www.instagram.com/*",
-    "https://instagram.com/*"
+    "https://instagram.com/*",
+    "https://esm.sh/*",
+    "https://*.esm.sh/*",
+    "https://cdn.jsdelivr.net/*",
+    "https://unpkg.com/*"
   ],
-  "action": {
+  "browser_action": {
     "default_popup": "index.html",
     "default_title": "Open InstaLearning"
   },
@@ -22,9 +27,7 @@
       "run_at": "document_idle"
     }
   ],
-  "content_security_policy": {
-    "extension_pages": "script-src 'self' 'wasm-unsafe-eval' https://esm.sh https://*.esm.sh https://cdn.jsdelivr.net https://ga.jspm.io https://unpkg.com; object-src 'self'; connect-src 'self' https://generativelanguage.googleapis.com https://*.googleapis.com https://esm.sh https://*.esm.sh https://cdn.jsdelivr.net https://ga.jspm.io https://unpkg.com"
-  },
+  "content_security_policy": "script-src 'self' 'unsafe-eval' https://esm.sh https://*.esm.sh https://cdn.jsdelivr.net https://ga.jspm.io https://unpkg.com; object-src 'self'; connect-src 'self' https://generativelanguage.googleapis.com https://*.googleapis.com https://esm.sh https://*.esm.sh https://cdn.jsdelivr.net https://ga.jspm.io https://unpkg.com",
   "browser_specific_settings": {
     "gecko": {
       "id": "instalearning@illustress.com",
