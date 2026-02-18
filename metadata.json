@@ -1,5 +1,5 @@
 {
-  "name": "Gemini Firefox Assistant",
-  "description": "A lightweight Firefox extension popup powered by Google Gemini for quick summarization, Q&A, and assistance.",
+  "name": "InstaLearning",
+  "description": "Learn German-Dutch vocabulary with quizzes, mini-games, and AI assistance.",
   "requestFramePermissions": []
 }

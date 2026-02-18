@@ -1,20 +1,37 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# InstaLearning
 
-# Run and deploy your AI Studio app
+Learn German-Dutch vocabulary with quizzes, mini-games, and AI assistance — right inside your Instagram browsing experience.
 
-This contains everything you need to run your app locally.
+## Features
 
-View your app in AI Studio: https://ai.studio/apps/drive/1a8X2uDjbipjif5UJU6pzpPd3dijfZC3Q
+- **4 Quiz Levels**: Multiple Choice, Type + Hints, Reverse, Speed Round
+- **3 Mini Games**: Word Scramble, Hangman, Match Pairs
+- **Credit System**: Earn credits by answering correctly, spend them to browse Instagram
+- **AI Cards**: Gemini-powered mnemonics, smart sentences, and image prompts
+- **Chat Assistant**: Built-in Gemini chat for vocabulary help
+- **Progress Tracking**: Word levels, session stats, streak bonuses
+- **CSV Import**: Bring your own word lists
 
-## Run Locally
+## Setup
 
-**Prerequisites:**  Node.js
-
+**Prerequisites:** Node.js
 
 1. Install dependencies:
    `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
+2. Set your Gemini API key in [polyfill.js](polyfill.js)
+3. Run the dev server:
    `npm run dev`
+
+## Install as Extension
+
+### Chrome / Edge / Brave
+
+1. Go to `chrome://extensions` (or `edge://extensions`)
+2. Enable **Developer mode**
+3. Click **Load unpacked** and select this folder
+
+### Firefox
+
+1. Go to `about:debugging#/runtime/this-firefox`
+2. Click **Load Temporary Add-on**
+3. Select `manifest.json` from this folder
