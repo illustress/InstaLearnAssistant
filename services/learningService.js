@@ -67,13 +67,15 @@ export const loadLearningData = async () => {
   try {
     const savedProgress = localStorage.getItem(STORAGE_KEY_PROGRESS);
     const savedSettings = localStorage.getItem(STORAGE_KEY_SETTINGS);
+    const savedWords = localStorage.getItem("il_words");
 
     const progressData = savedProgress ? JSON.parse(savedProgress) : {};
     const settingsData = savedSettings ? JSON.parse(savedSettings) : {};
+    const wordsData = savedWords ? JSON.parse(savedWords) : DEFAULT_WORDS;
 
     return {
       wordProgress: progressData.wordProgress || {},
-      words: DEFAULT_WORDS,
+      words: wordsData,
       credits: progressData.credits || 0,
       streak: progressData.streak || 0,
       direction: settingsData.direction || "german-to-dutch",
@@ -121,5 +123,7 @@ export const saveWords = async (words) => {
   const storage = getStorage();
   if (storage && storage.local) {
     storage.local.set({ customWords: words });
+  } else {
+    localStorage.setItem("il_words", JSON.stringify(words));
   }
 };

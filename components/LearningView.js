@@ -1,7 +1,6 @@
 import { React } from '../deps.js';
 const { useState, useEffect } = React;
 import { html } from '../utils.js';
-import { Check, X, RefreshCw } from 'https://esm.sh/lucide-react@0.263.1?deps=react@18.2.0';
 
 export const LearningView = ({ words, wordProgress, credits, streak, direction, correctAction, onUpdateState }) => {
   const [currentWord, setCurrentWord] = useState(null);

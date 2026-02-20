@@ -1,6 +1,6 @@
 import { GoogleGenAI } from "https://esm.sh/@google/genai";
 
-const API_KEY = window.process?.env?.API_KEY;
+const API_KEY = process.env.API_KEY || window.process?.env?.API_KEY;
 
 let client = null;
 
