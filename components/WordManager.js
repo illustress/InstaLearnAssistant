@@ -6,7 +6,7 @@ import { DEFAULT_WORDS } from '../words.js';
 import { generateImage } from '../services/geminiService.js';
 import { Image as ImageIcon, RefreshCw, Maximize2, Square } from 'https://esm.sh/lucide-react@0.263.1?deps=react@18.2.0';
 
-const Spinner = ({ size = 24, className = '' }) => html`
+export const Spinner = ({ size = 24, className = '' }) => html`
   <svg 
     className=${`animate-spin ${className}`}
     width=${size} 

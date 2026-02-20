@@ -27,7 +27,13 @@ export const LearningView = ({ words, wordProgress, credits, streak, direction, 
     const word = words[idx];
     
     // Generate wrong answers
-    const wrong = words
+    // Filter by same type (word vs phrase) to make distractors relevant
+    const sameTypeWords = words.filter(w => w.type === word.type);
+    
+    // If we don't have enough of the same type, fallback to all words
+    const pool = sameTypeWords.length >= 4 ? sameTypeWords : words;
+
+    const wrong = pool
         .filter(w => w.id !== word.id)
         .sort(() => 0.5 - Math.random())
         .slice(0, 3);
@@ -84,6 +90,11 @@ export const LearningView = ({ words, wordProgress, credits, streak, direction, 
   const questionText = direction === 'german-to-dutch' ? currentWord.german : currentWord.dutch;
   const answerKey = direction === 'german-to-dutch' ? 'dutch' : 'german';
   const flag = direction === 'german-to-dutch' ? '🇩🇪' : '🇳🇱';
+  
+  // Dynamic font size for long text
+  const isLong = questionText.length > 30;
+  const isVeryLong = questionText.length > 60;
+  const fontSize = isVeryLong ? '18px' : (isLong ? '22px' : '28px');
 
   return html`
     <div className="il-learning-view">
@@ -107,7 +118,7 @@ export const LearningView = ({ words, wordProgress, credits, streak, direction, 
             />
           `}
           <div className="il-q-flag">${flag}</div>
-          <h2 className="il-q-text">${questionText}</h2>
+          <h2 className="il-q-text" style=${{fontSize}}>${questionText}</h2>
           ${currentWord.emoji && html`<div className="il-q-emoji">${currentWord.emoji}</div>`}
        </div>
 

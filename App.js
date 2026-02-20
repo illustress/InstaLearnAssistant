@@ -6,6 +6,7 @@ import { loadLearningData, saveProgress } from './services/learningService.js';
 import { LearningView } from './components/LearningView.js';
 import { ChatView } from './components/ChatView.js';
 import { WordManager } from './components/WordManager.js';
+import { PhraseManager } from './components/PhraseManager.js';
 import { StatsView } from './components/StatsView.js';
 import { SettingsView } from './components/SettingsView.js';
 import { BookOpen } from 'https://esm.sh/lucide-react@0.263.1?deps=react@18.2.0';
@@ -13,6 +14,7 @@ import { BookOpen } from 'https://esm.sh/lucide-react@0.263.1?deps=react@18.2.0'
 const TABS = [
   { id: 'learn', icon: '📚', label: 'Learn' },
   { id: 'words', icon: '📖', label: 'Words' },
+  { id: 'phrases', icon: '🗣️', label: 'Phrases' },
   { id: 'stats', icon: '📊', label: 'Stats' },
   { id: 'chat',  icon: '💬', label: 'Chat' },
   { id: 'settings', icon: '⚙️', label: '' },
@@ -132,6 +134,14 @@ const App = () => {
           <div className="tab-content">
             <${WordManager}
               words=${words} wordProgress=${wordProgress}
+              onWordsChange=${handleWordsChange} />
+          </div>
+        ` : null}
+
+        ${tab === 'phrases' ? html`
+          <div className="tab-content">
+            <${PhraseManager}
+              words=${words}
               onWordsChange=${handleWordsChange} />
           </div>
         ` : null}
