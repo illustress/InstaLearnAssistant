@@ -417,6 +417,37 @@
   }
 }
 
+/* ---- Quiz Image ---- */
+.il-q-image {
+  width: 100%;
+  max-height: 180px;
+  object-fit: contain;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* ---- Enlarged Image Popup ---- */
+.il-enlarged-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 10000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  cursor: pointer;
+}
+.il-enlarged-img {
+  max-width: 100%;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 0 40px rgba(0,0,0,0.5);
+}
+
 /* ---- Scrollbar inside overlay ---- */
 .il-quiz-container::-webkit-scrollbar { width: 4px; }
 .il-quiz-container::-webkit-scrollbar-track { background: transparent; }

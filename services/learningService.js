@@ -72,10 +72,34 @@ export const loadLearningData = async () => {
     const progressData = savedProgress ? JSON.parse(savedProgress) : {};
     const settingsData = savedSettings ? JSON.parse(savedSettings) : {};
     const wordsData = savedWords ? JSON.parse(savedWords) : DEFAULT_WORDS;
+    
+    // Ensure words have IDs
+    const wordsWithIds = wordsData.map((w, i) => ({
+        ...w,
+        id: w.id || `w${i + 1}`
+    }));
+
+    let wordProgress = progressData.wordProgress || {};
+
+    // Migrate progress keys if needed
+    if (Object.keys(wordProgress).some(k => !isNaN(k))) {
+        const newProgress = {};
+        Object.keys(wordProgress).forEach(k => {
+            if (!isNaN(k)) {
+                const idx = parseInt(k);
+                if (wordsWithIds[idx]) {
+                    newProgress[wordsWithIds[idx].id] = wordProgress[k];
+                }
+            } else {
+                newProgress[k] = wordProgress[k];
+            }
+        });
+        wordProgress = newProgress;
+    }
 
     return {
-      wordProgress: progressData.wordProgress || {},
-      words: wordsData,
+      wordProgress,
+      words: wordsWithIds,
       credits: progressData.credits || 0,
       streak: progressData.streak || 0,
       direction: settingsData.direction || "german-to-dutch",

@@ -695,9 +695,30 @@
                 if (localData.wordProgress)
                   wordProgress = localData.wordProgress;
                 words =
-                  localData.customWords?.length > 0
+                  (localData.customWords?.length > 0
                     ? localData.customWords
-                    : DEFAULT_WORDS;
+                    : DEFAULT_WORDS).map((w, i) => ({
+                    ...w,
+                    id: w.id || `w${i + 1}`,
+                  }));
+
+                // Migrate progress keys if needed
+                if (wordProgress && Object.keys(wordProgress).some(k => !isNaN(k))) {
+                    const newProgress = {};
+                    Object.keys(wordProgress).forEach(k => {
+                        if (!isNaN(k)) {
+                            const idx = parseInt(k);
+                            if (words[idx]) {
+                                newProgress[words[idx].id] = wordProgress[k];
+                            }
+                        } else {
+                            newProgress[k] = wordProgress[k];
+                        }
+                    });
+                    wordProgress = newProgress;
+                    saveProgress(); // Persist migration
+                }
+
                 startSession();
                 resolve();
               },
@@ -883,8 +904,8 @@
 
   function pickWord() {
     if (words.length === 0) return { word: null, index: -1 };
-    const weights = words.map((_, idx) => {
-      const progress = wordProgress[idx];
+    const weights = words.map((w) => {
+      const progress = wordProgress[w.id];
       const level = progress?.level || 1;
       const correctCount = progress?.correct || 0;
       let weight = 5 - level;
@@ -967,8 +988,8 @@
     if (closeBtn) closeBtn.classList.toggle("hidden", credits <= 0);
   }
 
-  function updateProgressBar(wordIndex) {
-    const progress = wordProgress[wordIndex];
+  function updateProgressBar(wordId) {
+    const progress = wordProgress[wordId];
     const level = progress?.level || 1;
     const correct = progress?.correct || 0;
     const percentage = (level - 1) * 33.33 + (correct / 3) * 33.33;
@@ -1003,6 +1024,16 @@
 
     infoEl.textContent = "";
 
+    if (word.image) {
+      const imgEl = document.createElement("img");
+      imgEl.className = "il-q-image";
+      imgEl.src = word.image;
+      imgEl.style.cursor = "pointer";
+      imgEl.title = "Click to enlarge";
+      imgEl.addEventListener("click", () => showEnlargedImage(word.image));
+      infoEl.appendChild(imgEl);
+    }
+
     if (word.emoji) {
       const emojiEl = document.createElement("span");
       emojiEl.className = "il-emoji";
@@ -1030,6 +1061,14 @@
       exampleEl.textContent = `"${word.example}"`;
       infoEl.appendChild(exampleEl);
     }
+  }
+
+  function showEnlargedImage(src) {
+    const overlay = document.createElement("div");
+    overlay.className = "il-enlarged-overlay";
+    overlay.innerHTML = `<img src="${src}" class="il-enlarged-img">`;
+    overlay.addEventListener("click", () => overlay.remove());
+    document.body.appendChild(overlay);
   }
 
   function showBonusPopup(bonus, streakCount) {
@@ -1587,9 +1626,9 @@
     doubleOrNothingActive = false;
     updateCreditDisplay();
 
-    if (currentQuiz?.index !== undefined) {
-      updateWordProgress(currentQuiz.index, correct);
-      updateProgressBar(currentQuiz.index);
+    if (currentQuiz?.word?.id) {
+      updateWordProgress(currentQuiz.word.id, correct);
+      updateProgressBar(currentQuiz.word.id);
     }
 
     if (!correct) {
@@ -1700,7 +1739,7 @@
     currentQuiz = { word, index, direction, answer };
     currentGameMode = "quiz";
 
-    updateProgressBar(index);
+    updateProgressBar(word.id);
 
     overlay.querySelector(".il-level-badge").textContent =
       `Level ${level} (×${LEVEL_MULTIPLIERS[level]})`;

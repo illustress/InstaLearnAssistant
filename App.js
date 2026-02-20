@@ -35,7 +35,11 @@ const App = () => {
   // Load persisted data on mount
   useEffect(() => {
     loadLearningData().then(data => {
-      setWords(data.words);
+      const wordsWithIds = data.words.map((w, i) => ({
+        ...w,
+        id: w.id || `w${i + 1}`
+      }));
+      setWords(wordsWithIds);
       setWordProgress(data.wordProgress);
       setCredits(data.credits);
       setStreak(data.streak);
@@ -60,7 +64,11 @@ const App = () => {
   }, []);
 
   const handleWordsChange = useCallback((newWords, opts) => {
-    setWords(newWords || DEFAULT_WORDS);
+    const wordsWithIds = (newWords || DEFAULT_WORDS).map((w, i) => ({
+      ...w,
+      id: w.id || `custom-${i}-${Date.now()}`
+    }));
+    setWords(wordsWithIds);
     if (opts?.resetProgress) {
       setWordProgress({});
       setCredits(0);

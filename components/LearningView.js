@@ -1,5 +1,5 @@
 import { React } from '../deps.js';
-const { useState, useEffect } = React;
+const { useState, useEffect, useRef } = React;
 import { html } from '../utils.js';
 
 export const LearningView = ({ words, wordProgress, credits, streak, direction, correctAction, onUpdateState }) => {
@@ -7,10 +7,17 @@ export const LearningView = ({ words, wordProgress, credits, streak, direction, 
   const [options, setOptions] = useState([]);
   const [selected, setSelected] = useState(null);
   const [result, setResult] = useState(null); // 'correct' | 'wrong'
+  const [popupImg, setPopupImg] = useState(null);
+  const wordsLengthRef = useRef(words?.length || 0);
 
   useEffect(() => {
-    nextQuestion();
-  }, [words, direction]);
+    // Only auto-reset if words list length changed or direction changed
+    // This prevents resetting when images are generated in background
+    if (!currentWord || words?.length !== wordsLengthRef.current) {
+        nextQuestion();
+    }
+    wordsLengthRef.current = words?.length || 0;
+  }, [words?.length, direction]);
 
   const nextQuestion = () => {
     if (!words || words.length === 0) return;
@@ -21,7 +28,7 @@ export const LearningView = ({ words, wordProgress, credits, streak, direction, 
     
     // Generate wrong answers
     const wrong = words
-        .filter(w => w !== word)
+        .filter(w => w.id !== word.id)
         .sort(() => 0.5 - Math.random())
         .slice(0, 3);
         
@@ -37,7 +44,7 @@ export const LearningView = ({ words, wordProgress, credits, streak, direction, 
     if (result) return;
     setSelected(option);
     
-    const isCorrect = option === currentWord;
+    const isCorrect = option.id === currentWord.id;
     setResult(isCorrect ? 'correct' : 'wrong');
 
     // Update stats
@@ -45,9 +52,8 @@ export const LearningView = ({ words, wordProgress, credits, streak, direction, 
     const newCredits = isCorrect ? credits + 1 : credits;
     
     // Update word progress
-    // Find index of current word in master list
-    const wordIndex = words.indexOf(currentWord);
-    const currentWP = wordProgress[wordIndex] || { level: 1, correct: 0 };
+    const wordId = currentWord.id;
+    const currentWP = wordProgress[wordId] || { level: 1, correct: 0 };
     let newWP = { ...currentWP };
     
     if (isCorrect) {
@@ -60,7 +66,7 @@ export const LearningView = ({ words, wordProgress, credits, streak, direction, 
         newWP.correct = 0;
     }
 
-    const updatedProgress = { ...wordProgress, [wordIndex]: newWP };
+    const updatedProgress = { ...wordProgress, [wordId]: newWP };
     
     onUpdateState({
         streak: newStreak,
@@ -81,7 +87,25 @@ export const LearningView = ({ words, wordProgress, credits, streak, direction, 
 
   return html`
     <div className="il-learning-view">
+       ${popupImg && html`
+         <div className="il-img-popup-overlay" onClick=${() => setPopupImg(null)}>
+             <div className="il-img-popup-content" onClick=${e => e.stopPropagation()}>
+                 <img src=${popupImg} className="il-popup-img" />
+                 <button className="il-popup-close" onClick=${() => setPopupImg(null)}>Close</button>
+             </div>
+         </div>
+       `}
+
        <div className="il-question-card">
+          ${currentWord.image && html`
+            <img 
+                src=${currentWord.image} 
+                className="il-q-image" 
+                onClick=${() => setPopupImg(currentWord.image)}
+                style=${{cursor: 'pointer'}}
+                title="Click to enlarge"
+            />
+          `}
           <div className="il-q-flag">${flag}</div>
           <h2 className="il-q-text">${questionText}</h2>
           ${currentWord.emoji && html`<div className="il-q-emoji">${currentWord.emoji}</div>`}
@@ -89,8 +113,8 @@ export const LearningView = ({ words, wordProgress, credits, streak, direction, 
 
        <div className="il-options-grid">
          ${options.map(opt => {
-            const isSelected = selected === opt;
-            const isCorrect = opt === currentWord;
+            const isSelected = selected?.id === opt.id;
+            const isCorrect = opt.id === currentWord.id;
             let btnClass = "il-option-btn";
             if (result) {
                 if (isCorrect) btnClass += " correct";
@@ -100,7 +124,7 @@ export const LearningView = ({ words, wordProgress, credits, streak, direction, 
 
             return html`
               <button 
-                key=${opt.german} 
+                key=${opt.id} 
                 className=${btnClass}
                 disabled=${!!result}
                 onClick=${() => handleAnswer(opt)}

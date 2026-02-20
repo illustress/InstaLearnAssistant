@@ -274,84 +274,70 @@ textarea {
 .il-level-bar-fill.level-4 { background: #a78bfa; }
 .il-level-bar-count { width: 30px; text-align: right; font-weight: bold; }
 
-/* ---- Settings & Word Manager ---- */
-.il-import-section { display: flex; gap: 8px; margin-bottom: 8px; }
-.il-ai-actions { margin-bottom: 16px; }
-.il-ai-btn {
-  width: 100%;
-  padding: 10px;
-  background: linear-gradient(to right, #6366f1, #a855f7);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: opacity 0.2s;
+/* Word Manager Images */
+.il-word-row { align-items: center; }
+.il-word-img-preview {
+  width: 40px; height: 40px; object-fit: cover; border-radius: 4px;
+  margin-right: 8px; cursor: pointer; border: 1px solid #475569;
+  background: #0f172a;
 }
-.il-ai-btn:hover:not(:disabled) { opacity: 0.9; }
-.il-ai-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.il-word-actions { display: flex; gap: 4px; margin-left: auto; }
+.il-icon-btn-sm {
+  padding: 6px; background: transparent; border: 1px solid #475569;
+  border-radius: 4px; color: #94a3b8; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.il-icon-btn-sm:hover { color: #e2e8f0; border-color: #64748b; background: rgba(255,255,255,0.05); }
 
+/* Image Popup */
+.il-img-popup-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.85); z-index: 100;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.il-img-popup-content {
+  background: #1e293b; padding: 16px; border-radius: 12px;
+  max-width: 100%; max-height: 100%; display: flex; flex-direction: column; gap: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+.il-popup-img {
+  max-width: 100%; max-height: 70vh; object-fit: contain; border-radius: 8px;
+}
+.il-popup-close {
+  align-self: flex-end; padding: 8px 16px; background: #334155;
+  border: none; color: white; border-radius: 6px; cursor: pointer;
+  font-weight: 600;
+}
+.il-popup-close:hover { background: #475569; }
+
+/* Learning View Image */
+.il-q-image {
+  width: 100%; max-height: 180px; object-fit: contain; border-radius: 8px;
+  margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(0,0,0,0.2);
+}
+
+.il-gen-all-btn {
+  width: 100%; margin-top: 8px; padding: 10px;
+  background: linear-gradient(to right, #8b5cf6, #d946ef);
+  border: none; border-radius: 8px; color: white; font-weight: 600;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.il-gen-all-btn:disabled { opacity: 0.7; cursor: wait; }
+.il-gen-all-btn:hover:not(:disabled) { opacity: 0.9; }
+
+/* ---- Settings & Word Manager ---- */
+.il-import-section { display: flex; gap: 8px; margin-bottom: 16px; }
 .il-file-btn, .il-reset-btn { flex: 1; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; }
 .il-file-btn { background: #4f46e5; color: white; }
 .il-reset-btn { background: #334155; color: #e2e8f0; }
 
 .il-word-list { max-height: 400px; overflow-y: auto; background: #1e293b; border-radius: 8px; }
 .il-word-row {
-  display: flex; align-items: center; padding: 10px 12px;
+  display: flex; justify-content: space-between; padding: 10px 12px;
   border-bottom: 1px solid #334155; font-size: 13px;
-  gap: 12px;
 }
-.il-word-preview {
-  width: 40px;
-  height: 40px;
-  border-radius: 6px;
-  overflow: hidden;
-  background: #0f172a;
-  flex-shrink: 0;
-  cursor: pointer;
-  border: 1px solid #334155;
-}
-.il-word-thumb {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.il-word-thumb-placeholder {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #475569;
-}
-.il-word-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.il-word-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.il-regen-btn {
-  background: none;
-  border: none;
-  color: #64748b;
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
-  transition: color 0.2s, background 0.2s;
-}
-.il-regen-btn:hover:not(:disabled) { color: #e2e8f0; background: #334155; }
-.il-regen-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-
 .il-word-row:last-child { border-bottom: none; }
 .il-word-level-badge { background: #334155; padding: 2px 6px; border-radius: 4px; font-size: 10px; color: #94a3b8; }
 
@@ -363,54 +349,3 @@ textarea {
   background: transparent; border-radius: 8px; cursor: pointer;
 }
 .il-reset-progress-btn:hover { background: rgba(239,68,68,0.1); }
-
-/* Modal */
-.il-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0,0,0,0.85);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 20px;
-}
-.il-modal-content {
-  position: relative;
-  max-width: 100%;
-  max-height: 100%;
-}
-.il-modal-close {
-  position: absolute;
-  top: -40px;
-  right: 0;
-  background: none;
-  border: none;
-  color: white;
-  cursor: pointer;
-}
-.il-enlarged-img {
-  max-width: 100%;
-  max-height: 80vh;
-  border-radius: 12px;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-}
-
-/* Quiz Image */
-.il-q-image-container {
-  margin: 16px 0;
-  width: 100%;
-  aspect-ratio: 1/1;
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid rgba(255,255,255,0.1);
-  background: #000;
-}
-.il-q-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
