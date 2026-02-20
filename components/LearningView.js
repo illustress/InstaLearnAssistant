@@ -1,6 +1,7 @@
 import { React } from '../deps.js';
 const { useState, useEffect, useRef } = React;
 import { html } from '../utils.js';
+import { Volume2 } from 'https://esm.sh/lucide-react@0.263.1?deps=react@18.2.0';
 
 export const LearningView = ({ words, wordProgress, credits, streak, direction, correctAction, onUpdateState }) => {
   const [currentWord, setCurrentWord] = useState(null);
@@ -8,6 +9,7 @@ export const LearningView = ({ words, wordProgress, credits, streak, direction, 
   const [selected, setSelected] = useState(null);
   const [result, setResult] = useState(null); // 'correct' | 'wrong'
   const [popupImg, setPopupImg] = useState(null);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const wordsLengthRef = useRef(words?.length || 0);
 
   useEffect(() => {
@@ -18,6 +20,31 @@ export const LearningView = ({ words, wordProgress, credits, streak, direction, 
     }
     wordsLengthRef.current = words?.length || 0;
   }, [words?.length, direction]);
+
+  const speakText = (text, lang) => {
+      if (!window.speechSynthesis) return;
+      
+      // Cancel any ongoing speech
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      // Map 'german-to-dutch' context to actual BCP 47 language tags
+      // If direction is German->Dutch, question is German (de-DE)
+      // If direction is Dutch->German, question is Dutch (nl-NL)
+      utterance.lang = lang === 'german' ? 'de-DE' : 'nl-NL';
+      
+      // Try to find a good voice
+      const voices = window.speechSynthesis.getVoices();
+      const voice = voices.find(v => v.lang.startsWith(utterance.lang));
+      if (voice) utterance.voice = voice;
+
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => setIsSpeaking(false);
+      utterance.onerror = () => setIsSpeaking(false);
+
+      window.speechSynthesis.speak(utterance);
+  };
 
   const nextQuestion = () => {
     if (!words || words.length === 0) return;
@@ -118,7 +145,28 @@ export const LearningView = ({ words, wordProgress, credits, streak, direction, 
             />
           `}
           <div className="il-q-flag">${flag}</div>
-          <h2 className="il-q-text" style=${{fontSize}}>${questionText}</h2>
+          <div style=${{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'}}>
+              <h2 className="il-q-text" style=${{fontSize}}>${questionText}</h2>
+              <button 
+                onClick=${(e) => {
+                    e.stopPropagation();
+                    speakText(questionText, direction === 'german-to-dutch' ? 'german' : 'dutch');
+                }}
+                className="il-icon-btn-sm"
+                style=${{
+                    border: 'none', 
+                    background: isSpeaking ? '#22c55e' : 'rgba(255,255,255,0.1)', 
+                    color: isSpeaking ? 'white' : 'inherit',
+                    borderRadius: '50%', 
+                    width: '32px', 
+                    height: '32px',
+                    transition: 'background 0.2s ease'
+                }}
+                title="Listen"
+              >
+                <${Volume2} size=${18} />
+              </button>
+          </div>
           ${currentWord.emoji && html`<div className="il-q-emoji">${currentWord.emoji}</div>`}
        </div>
 
