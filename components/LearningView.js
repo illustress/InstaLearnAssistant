@@ -186,10 +186,38 @@ export const LearningView = ({ words, wordProgress, credits, streak, direction, 
               <button 
                 key=${opt.id} 
                 className=${btnClass}
-                disabled=${!!result}
                 onClick=${() => handleAnswer(opt)}
+                style=${{
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between', 
+                    padding: '0 12px',
+                    position: 'relative'
+                }}
               >
-                ${opt[answerKey]}
+                <span style=${{flex: 1, textAlign: 'center'}}>${opt[answerKey]}</span>
+                <div 
+                    onClick=${(e) => {
+                        e.stopPropagation();
+                        speakText(opt[answerKey], answerKey);
+                    }}
+                    style=${{
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        padding: '8px',
+                        borderRadius: '50%',
+                        cursor: 'pointer',
+                        opacity: 0.6,
+                        zIndex: 10,
+                        marginLeft: '8px'
+                    }}
+                    onMouseEnter=${e => e.currentTarget.style.opacity = '1'}
+                    onMouseLeave=${e => e.currentTarget.style.opacity = '0.6'}
+                    title="Listen"
+                >
+                    <${Volume2} size=${16} />
+                </div>
               </button>
             `;
          })}
