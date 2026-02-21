@@ -6,7 +6,7 @@ import { generateImage } from '../services/geminiService.js';
 import { Image as ImageIcon, Loader2, RefreshCw, Square, Trash2, Volume2 } from 'https://esm.sh/lucide-react@0.263.1?deps=react@18.2.0';
 import { Spinner } from './WordManager.js';
 
-export const PhraseManager = ({ words, onWordsChange }) => {
+export const PhraseManager = ({ words, onWordsChange, speechRate }) => {
   const [importText, setImportText] = useState('');
   const [showImport, setShowImport] = useState(true);
   const [generating, setGenerating] = useState(false);
@@ -193,7 +193,7 @@ export const PhraseManager = ({ words, onWordsChange }) => {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = lang === 'german' ? 'de-DE' : 'nl-NL';
-      utterance.rate = 0.7; // Slower speech
+      utterance.rate = speechRate || 0.7; 
       const voices = window.speechSynthesis.getVoices();
       const voice = voices.find(v => v.lang.startsWith(utterance.lang));
       if (voice) utterance.voice = voice;

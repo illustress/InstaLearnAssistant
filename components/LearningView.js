@@ -3,7 +3,7 @@ const { useState, useEffect, useRef } = React;
 import { html } from '../utils.js';
 import { Volume2 } from 'https://esm.sh/lucide-react@0.263.1?deps=react@18.2.0';
 
-export const LearningView = ({ words, wordProgress, credits, streak, direction, correctAction, onUpdateState }) => {
+export const LearningView = ({ words, wordProgress, credits, streak, direction, correctAction, speechRate, onUpdateState }) => {
   const [currentWord, setCurrentWord] = useState(null);
   const [options, setOptions] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -33,7 +33,7 @@ export const LearningView = ({ words, wordProgress, credits, streak, direction, 
       // If direction is German->Dutch, question is German (de-DE)
       // If direction is Dutch->German, question is Dutch (nl-NL)
       utterance.lang = lang === 'german' ? 'de-DE' : 'nl-NL';
-      utterance.rate = 0.7; // Slower speech
+      utterance.rate = speechRate || 0.7; 
       
       // Try to find a good voice
       const voices = window.speechSynthesis.getVoices();

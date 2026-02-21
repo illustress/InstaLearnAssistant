@@ -22,7 +22,7 @@ export const Spinner = ({ size = 24, className = '' }) => html`
   </svg>
 `;
 
-export const WordManager = ({ words, wordProgress, onWordsChange }) => {
+export const WordManager = ({ words, wordProgress, onWordsChange, speechRate }) => {
   const [importText, setImportText] = useState('');
   const [showImport, setShowImport] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -182,7 +182,7 @@ export const WordManager = ({ words, wordProgress, onWordsChange }) => {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = lang === 'german' ? 'de-DE' : 'nl-NL';
-      utterance.rate = 0.7; // Slower speech
+      utterance.rate = speechRate || 0.7; 
       const voices = window.speechSynthesis.getVoices();
       const voice = voices.find(v => v.lang.startsWith(utterance.lang));
       if (voice) utterance.voice = voice;
