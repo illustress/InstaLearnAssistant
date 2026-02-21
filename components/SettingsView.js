@@ -2,29 +2,35 @@ import { React } from '../deps.js';
 import { html } from '../utils.js';
 import { saveSettings } from '../services/learningService.js';
 
-export const SettingsView = ({ direction, correctAction, speechRate, credits, streak, wordProgress, onUpdate }) => {
+export const SettingsView = ({ direction, correctAction, speechRate, autoPlayAudio, credits, streak, wordProgress, onUpdate }) => {
   
   const handleDirChange = (e) => {
       const val = e.target.value;
-      onUpdate(val, correctAction, speechRate);
-      saveSettings(val, correctAction, speechRate);
+      onUpdate(val, correctAction, speechRate, autoPlayAudio);
+      saveSettings(val, correctAction, speechRate, autoPlayAudio);
   };
 
   const handleActionChange = (e) => {
       const val = e.target.value;
-      onUpdate(direction, val, speechRate);
-      saveSettings(direction, val, speechRate);
+      onUpdate(direction, val, speechRate, autoPlayAudio);
+      saveSettings(direction, val, speechRate, autoPlayAudio);
   };
 
   const handleRateChange = (e) => {
       const val = parseFloat(e.target.value);
-      onUpdate(direction, correctAction, val);
-      saveSettings(direction, correctAction, val);
+      onUpdate(direction, correctAction, val, autoPlayAudio);
+      saveSettings(direction, correctAction, val, autoPlayAudio);
+  };
+
+  const handleAutoPlayChange = (e) => {
+      const val = e.target.checked;
+      onUpdate(direction, correctAction, speechRate, val);
+      saveSettings(direction, correctAction, speechRate, val);
   };
 
   const handleResetProgress = () => {
     if (confirm("Are you sure? This will wipe credits, streak, and word levels.")) {
-        onUpdate(direction, correctAction, speechRate, { resetProgress: true });
+        onUpdate(direction, correctAction, speechRate, autoPlayAudio, { resetProgress: true });
     }
   };
 
@@ -62,6 +68,18 @@ export const SettingsView = ({ direction, correctAction, speechRate, credits, st
                 />
                 <span style=${{fontSize: '12px', color: '#64748b'}}>Fast</span>
             </div>
+        </div>
+
+        <div className="il-setting-group">
+            <label className="il-setting-label" style=${{display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer'}}>
+                <input 
+                    type="checkbox" 
+                    checked=${autoPlayAudio} 
+                    onChange=${handleAutoPlayChange} 
+                    style=${{width: '16px', height: '16px'}}
+                />
+                Auto-play Audio on New Question
+            </label>
         </div>
 
         <div className="il-settings-divider"></div>

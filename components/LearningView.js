@@ -3,7 +3,7 @@ const { useState, useEffect, useRef } = React;
 import { html } from '../utils.js';
 import { Volume2 } from 'https://esm.sh/lucide-react@0.263.1?deps=react@18.2.0';
 
-export const LearningView = ({ words, wordProgress, credits, streak, direction, correctAction, speechRate, onUpdateState }) => {
+export const LearningView = ({ words, wordProgress, credits, streak, direction, correctAction, speechRate, autoPlayAudio, onUpdateState }) => {
   const [currentWord, setCurrentWord] = useState(null);
   const [options, setOptions] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -20,6 +20,16 @@ export const LearningView = ({ words, wordProgress, credits, streak, direction, 
     }
     wordsLengthRef.current = words?.length || 0;
   }, [words?.length, direction]);
+
+  useEffect(() => {
+    if (currentWord && autoPlayAudio) {
+        const text = direction === 'german-to-dutch' ? currentWord.german : currentWord.dutch;
+        const lang = direction === 'german-to-dutch' ? 'german' : 'dutch';
+        // Small delay ensures it doesn't clip if rendering takes a frame
+        const timer = setTimeout(() => speakText(text, lang), 50);
+        return () => clearTimeout(timer);
+    }
+  }, [currentWord?.id, autoPlayAudio, direction]);
 
   const speakText = (text, lang) => {
       if (!window.speechSynthesis) return;

@@ -29,6 +29,7 @@ const App = () => {
   const [direction, setDirection] = useState('german-to-dutch');
   const [correctAction, setCorrectAction] = useState('next');
   const [speechRate, setSpeechRate] = useState(0.7);
+  const [autoPlayAudio, setAutoPlayAudio] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
   // Refs for stable callback
@@ -49,6 +50,7 @@ const App = () => {
       setDirection(data.direction);
       setCorrectAction(data.correctAction);
       setSpeechRate(data.speechRate || 0.7);
+      setAutoPlayAudio(data.autoPlayAudio || false);
       setLoaded(true);
     });
   }, []);
@@ -81,10 +83,11 @@ const App = () => {
     }
   }, []);
 
-  const handleSettingsUpdate = useCallback((dir, action, rate, opts) => {
-    if (dir) setDirection(dir);
-    if (action) setCorrectAction(action);
-    if (rate) setSpeechRate(rate);
+  const handleSettingsUpdate = useCallback((dir, action, rate, autoPlay, opts) => {
+    if (dir !== undefined) setDirection(dir);
+    if (action !== undefined) setCorrectAction(action);
+    if (rate !== undefined) setSpeechRate(rate);
+    if (autoPlay !== undefined) setAutoPlayAudio(autoPlay);
     
     if (opts?.resetProgress) {
       setWordProgress({});
@@ -129,7 +132,7 @@ const App = () => {
             <${LearningView}
               words=${words} wordProgress=${wordProgress}
               credits=${credits} streak=${streak} direction=${direction}
-              correctAction=${correctAction} speechRate=${speechRate}
+              correctAction=${correctAction} speechRate=${speechRate} autoPlayAudio=${autoPlayAudio}
               onUpdateState=${handleUpdateState} />
           </div>
         ` : null}
@@ -165,7 +168,7 @@ const App = () => {
         ${tab === 'settings' ? html`
           <div className="tab-content">
             <${SettingsView}
-              direction=${direction} correctAction=${correctAction} speechRate=${speechRate}
+              direction=${direction} correctAction=${correctAction} speechRate=${speechRate} autoPlayAudio=${autoPlayAudio}
               credits=${credits} streak=${streak} wordProgress=${wordProgress}
               onUpdate=${handleSettingsUpdate} />
           </div>

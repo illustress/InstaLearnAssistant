@@ -61,6 +61,7 @@ export const loadLearningData = async () => {
       direction: sync.direction || "german-to-dutch",
       correctAction: sync.correctAction || "next",
       speechRate: sync.speechRate || 0.7,
+      autoPlayAudio: sync.autoPlayAudio || false,
     };
   }
 
@@ -106,6 +107,7 @@ export const loadLearningData = async () => {
       direction: settingsData.direction || "german-to-dutch",
       correctAction: settingsData.correctAction || "next",
       speechRate: settingsData.speechRate || 0.7,
+      autoPlayAudio: settingsData.autoPlayAudio || false,
     };
   } catch (e) {
     console.warn("Failed to load local data", e);
@@ -117,6 +119,7 @@ export const loadLearningData = async () => {
       direction: "german-to-dutch",
       correctAction: "next",
       speechRate: 0.7,
+      autoPlayAudio: false,
     };
   }
 };
@@ -134,14 +137,14 @@ export const saveProgress = async (wordProgress, credits, streak) => {
   }
 };
 
-export const saveSettings = async (direction, correctAction, speechRate) => {
+export const saveSettings = async (direction, correctAction, speechRate, autoPlayAudio) => {
   const storage = getStorage();
   if (storage && storage.sync) {
-    storage.sync.set({ direction, correctAction, speechRate });
+    storage.sync.set({ direction, correctAction, speechRate, autoPlayAudio });
   } else {
     localStorage.setItem(
       STORAGE_KEY_SETTINGS,
-      JSON.stringify({ direction, correctAction, speechRate }),
+      JSON.stringify({ direction, correctAction, speechRate, autoPlayAudio }),
     );
   }
 };
