@@ -28,6 +28,7 @@ const App = () => {
   const [streak, setStreak] = useState(0);
   const [direction, setDirection] = useState('german-to-dutch');
   const [correctAction, setCorrectAction] = useState('next');
+  const [speechRate, setSpeechRate] = useState(0.7);
   const [loaded, setLoaded] = useState(false);
 
   // Refs for stable callback
@@ -47,6 +48,7 @@ const App = () => {
       setStreak(data.streak);
       setDirection(data.direction);
       setCorrectAction(data.correctAction);
+      setSpeechRate(data.speechRate || 0.7);
       setLoaded(true);
     });
   }, []);
@@ -79,9 +81,11 @@ const App = () => {
     }
   }, []);
 
-  const handleSettingsUpdate = useCallback((dir, action, opts) => {
-    setDirection(dir);
-    setCorrectAction(action);
+  const handleSettingsUpdate = useCallback((dir, action, rate, opts) => {
+    if (dir) setDirection(dir);
+    if (action) setCorrectAction(action);
+    if (rate) setSpeechRate(rate);
+    
     if (opts?.resetProgress) {
       setWordProgress({});
       setCredits(0);
@@ -125,7 +129,7 @@ const App = () => {
             <${LearningView}
               words=${words} wordProgress=${wordProgress}
               credits=${credits} streak=${streak} direction=${direction}
-              correctAction=${correctAction}
+              correctAction=${correctAction} speechRate=${speechRate}
               onUpdateState=${handleUpdateState} />
           </div>
         ` : null}
@@ -134,7 +138,7 @@ const App = () => {
           <div className="tab-content">
             <${WordManager}
               words=${words} wordProgress=${wordProgress}
-              onWordsChange=${handleWordsChange} />
+              onWordsChange=${handleWordsChange} speechRate=${speechRate} />
           </div>
         ` : null}
 
@@ -142,7 +146,7 @@ const App = () => {
           <div className="tab-content">
             <${PhraseManager}
               words=${words}
-              onWordsChange=${handleWordsChange} />
+              onWordsChange=${handleWordsChange} speechRate=${speechRate} />
           </div>
         ` : null}
 
@@ -161,7 +165,7 @@ const App = () => {
         ${tab === 'settings' ? html`
           <div className="tab-content">
             <${SettingsView}
-              direction=${direction} correctAction=${correctAction}
+              direction=${direction} correctAction=${correctAction} speechRate=${speechRate}
               credits=${credits} streak=${streak} wordProgress=${wordProgress}
               onUpdate=${handleSettingsUpdate} />
           </div>
