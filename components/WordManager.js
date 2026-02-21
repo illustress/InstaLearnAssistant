@@ -4,7 +4,7 @@ import { html } from '../utils.js';
 import { saveWords } from '../services/learningService.js';
 import { DEFAULT_WORDS } from '../words.js';
 import { generateImage } from '../services/geminiService.js';
-import { Image as ImageIcon, RefreshCw, Maximize2, Square } from 'https://esm.sh/lucide-react@0.263.1?deps=react@18.2.0';
+import { Image as ImageIcon, RefreshCw, Maximize2, Square, Trash2, Volume2 } from 'https://esm.sh/lucide-react@0.263.1?deps=react@18.2.0';
 
 export const Spinner = ({ size = 24, className = '' }) => html`
   <svg 
@@ -168,6 +168,27 @@ export const WordManager = ({ words, wordProgress, onWordsChange }) => {
       }
   };
 
+  const handleDelete = async (index) => {
+    const w = words[index];
+    if (!confirm(`Delete word "${w.german}"?`)) return;
+    
+    const newWords = words.filter((_, i) => i !== index);
+    await saveWords(newWords);
+    onWordsChange(newWords);
+  };
+
+  const speakText = (text, lang) => {
+      if (!window.speechSynthesis) return;
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = lang === 'german' ? 'de-DE' : 'nl-NL';
+      utterance.rate = 0.7; // Slower speech
+      const voices = window.speechSynthesis.getVoices();
+      const voice = voices.find(v => v.lang.startsWith(utterance.lang));
+      if (voice) utterance.voice = voice;
+      window.speechSynthesis.speak(utterance);
+  };
+
   return html`
     <div className="il-word-manager">
       ${popupImg && html`
@@ -266,9 +287,19 @@ export const WordManager = ({ words, wordProgress, onWordsChange }) => {
                     `)}
                     
                     <div className="il-word-pair">
-                        <span>${w.emoji} ${w.german}</span>
+                        <div style=${{display: 'flex', alignItems: 'center', gap: '4px'}}>
+                            <span>${w.emoji} ${w.german}</span>
+                            <button className="il-icon-btn-sm" style=${{border: 'none', background: 'transparent', padding: 2}} onClick=${() => speakText(w.german, 'german')}>
+                                <${Volume2} size=${14} />
+                            </button>
+                        </div>
                         <span style=${{color: '#64748b', margin: '0 4px'}}>→</span>
-                        <span>${w.dutch}</span>
+                        <div style=${{display: 'flex', alignItems: 'center', gap: '4px'}}>
+                            <span>${w.dutch}</span>
+                            <button className="il-icon-btn-sm" style=${{border: 'none', background: 'transparent', padding: 2}} onClick=${() => speakText(w.dutch, 'dutch')}>
+                                <${Volume2} size=${14} />
+                            </button>
+                        </div>
                     </div>
                     
                     <div className="il-word-actions">
@@ -282,6 +313,15 @@ export const WordManager = ({ words, wordProgress, onWordsChange }) => {
                             disabled=${generating}
                         >
                             ${isRegenerating ? html`<${Spinner} size=${14} />` : html`<${RefreshCw} size=${14} />`}
+                        </button>
+                        <button 
+                            className="il-icon-btn-sm" 
+                            onClick=${() => handleDelete(i)}
+                            title="Delete Word"
+                            disabled=${generating}
+                            style=${{color: '#ef4444'}}
+                        >
+                            <${Trash2} size=${14} />
                         </button>
                     </div>
                 </div>

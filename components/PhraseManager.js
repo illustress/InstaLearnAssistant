@@ -3,7 +3,7 @@ const { useState } = React;
 import { html } from '../utils.js';
 import { saveWords } from '../services/learningService.js';
 import { generateImage } from '../services/geminiService.js';
-import { Image as ImageIcon, Loader2, RefreshCw, Square } from 'https://esm.sh/lucide-react@0.263.1?deps=react@18.2.0';
+import { Image as ImageIcon, Loader2, RefreshCw, Square, Trash2, Volume2 } from 'https://esm.sh/lucide-react@0.263.1?deps=react@18.2.0';
 import { Spinner } from './WordManager.js';
 
 export const PhraseManager = ({ words, onWordsChange }) => {
@@ -22,6 +22,8 @@ export const PhraseManager = ({ words, onWordsChange }) => {
     // Strategy: Accumulate lines into a "block" until a new number is found.
     
     let currentBlock = [];
+    let lastParentDutch = "";
+    let lastParentGerman = "";
     
     const processBlock = (block) => {
         if (block.length === 0) return;
@@ -32,46 +34,26 @@ export const PhraseManager = ({ words, onWordsChange }) => {
         // Remove leading number
         let content = fullText.replace(/^\d+\s+/, '').trim();
         
-        // Handle "..." prefix if it was a continuation
-        // (The logic for attaching to parent is complex, let's treat them as separate phrases for now
-        // or just let the user edit them in the preview)
+        // Check if this is a continuation (starts with ...)
+        let isContinuation = content.startsWith('...') || content.startsWith('…');
         
         // Split Dutch / German
         let dutch = "";
         let german = "";
         
         // Heuristic: Look for the transition.
-        // The user text often has Dutch then German.
-        // "Hallo! Ik ben nieuw hier. Weet jij waar ..... Hallo! Ich bin neu hier. Weißt du, wo …"
-        // We can try to find the repetition of the concept or a specific delimiter?
-        // Actually, in the example: "1 Hallo! ... ..... Hallo! ..."
-        // It seems the German part starts with a capital letter often?
+        const germanStartRegex = /(\s+)(Ich|Du|Er|Sie|Es|Wir|Ihr|Sie|Der|Die|Das|Ein|Eine|Einen|Einer|Eines|Hallo|Ja|Nein|Wie|Wo|Was|Mit|Und|Aber|Oder|Denn|Guten|Tschüss|Auf|Danke|Bitte|Entschuldigung|Vielleicht|Natürlich|Sicher|Genau|Richtig|Falsch|Links|Rechts|Geradeaus|Oben|Unten|Vor|Hinter|Neben|Zwischen|In|An|Auf|Unter|Über|Bei|Von|Zu|Aus|Nach|Seit|Bis|Durch|Für|Ohne|Gegen|Um|Entlang|Zwei|Drei|Vier|Fünf|Sechs|Sieben|Acht|Neun|Zehn|Keine|Kein|keine|kein)\b/g;
         
-        // Let's try to split by "  " (double space) if present, or just use the mid-point heuristic 
-        // but refined with language detection if possible? No, too complex.
-        
-        // Let's look for the "German Start" pattern again, it was a good idea.
-        // Common German words that might start a sentence:
-        // Ich, Du, Er, Sie, Es, Wir, Ihr, Sie, Der, Die, Das, Ein, Eine, Hallo, Ja, Nein, Wie, Wo, Was, Mit, Und...
-        
-        const germanStartRegex = /(\s+)(Ich|Du|Er|Sie|Es|Wir|Ihr|Sie|Der|Die|Das|Ein|Eine|Hallo|Ja|Nein|Wie|Wo|Was|Mit|Und|Aber|Oder|Denn|Guten|Tschüss|Auf|Danke|Bitte|Entschuldigung|Vielleicht|Natürlich|Sicher|Genau|Richtig|Falsch|Links|Rechts|Geradeaus|Oben|Unten|Vor|Hinter|Neben|Zwischen|In|An|Auf|Unter|Über|Bei|Von|Zu|Aus|Nach|Seit|Bis|Durch|Für|Ohne|Gegen|Um|Entlang)\b/g;
-        
-        // We want the *last* valid split point that makes sense, or the *first*?
-        // "Hallo! ... Hallo! ..." -> Split at second Hallo.
-        
-        // Let's try to find a match that is roughly in the middle?
         let bestSplitIndex = -1;
         let minDiff = Infinity;
         
         let match;
         while ((match = germanStartRegex.exec(content)) !== null) {
             const index = match.index;
-            // Check balance
             const len1 = index;
             const len2 = content.length - index;
             const diff = Math.abs(len1 - len2);
             
-            // We prefer a split that is somewhat balanced, but also respects sentence structure.
             if (diff < minDiff) {
                 minDiff = diff;
                 bestSplitIndex = index;
@@ -89,7 +71,6 @@ export const PhraseManager = ({ words, onWordsChange }) => {
                     dutch = parts[0].trim() + '?';
                     german = parts.slice(1).join('?').trim();
                  } else {
-                     // Just split in half
                      const words = content.split(' ');
                      const mid = Math.floor(words.length / 2);
                      dutch = words.slice(0, mid).join(' ');
@@ -101,6 +82,40 @@ export const PhraseManager = ({ words, onWordsChange }) => {
                  dutch = words.slice(0, mid).join(' ');
                  german = words.slice(mid).join(' ');
              }
+        }
+
+        // Handle continuation logic
+        if (isContinuation) {
+            // Remove the "..." from the current parts
+            let cleanDutch = dutch.replace(/^[\.…]+/, '').trim();
+            let cleanGerman = german.replace(/^[\.…]+/, '').trim();
+            
+            // If we have a parent, merge
+            if (lastParentDutch && lastParentGerman) {
+                // Try to replace placeholder in parent
+                const placeholderRegex = /(\.{2,}|…)/;
+                
+                if (placeholderRegex.test(lastParentDutch)) {
+                    dutch = lastParentDutch.replace(placeholderRegex, ` ${cleanDutch} `).replace(/\s+/g, ' ').trim();
+                } else {
+                    // Append if no placeholder
+                    dutch = `${lastParentDutch} ${cleanDutch}`;
+                }
+
+                if (placeholderRegex.test(lastParentGerman)) {
+                    german = lastParentGerman.replace(placeholderRegex, ` ${cleanGerman} `).replace(/\s+/g, ' ').trim();
+                } else {
+                    german = `${lastParentGerman} ${cleanGerman}`;
+                }
+            } else {
+                // No parent found, just clean up
+                dutch = cleanDutch;
+                german = cleanGerman;
+            }
+        } else {
+            // This is a new parent candidate
+            lastParentDutch = dutch;
+            lastParentGerman = german;
         }
 
         phrases.push({
@@ -133,43 +148,59 @@ export const PhraseManager = ({ words, onWordsChange }) => {
     setPreviewPhrases(phrases);
   };
 
-  const handleImport = () => {
-    if (previewPhrases.length === 0) return;
-    
-    const combined = [...words, ...previewPhrases];
-    saveWords(combined);
-    onWordsChange(combined);
-    setImportText('');
-    setPreviewPhrases([]);
-    setShowImport(false);
-    alert(`Added ${previewPhrases.length} phrases!`);
+  const handleRegenerate = async (index) => {
+    const w = phrases[index];
+    if (!confirm(`Regenerate image for "${w.dutch}"?`)) return;
+
+    // We need to update the main words list, but we only have the filtered phrases here.
+    // We need to find the index in the main 'words' array.
+    const mainIndex = words.findIndex(word => word.id === w.id);
+    if (mainIndex === -1) return;
+
+    setGenerating(true);
+    try {
+        const seed = Math.random().toString(36).substr(2, 5);
+        const prompt = `Scene illustrating: "${w.german}". Context: ${w.dutch}. Simple, colorful, vector art style. Variation: ${seed}`;
+        const imgData = await generateImage(prompt);
+        
+        const newWords = [...words];
+        newWords[mainIndex] = { ...w, image: imgData };
+        saveWords(newWords);
+        onWordsChange(newWords);
+    } catch (e) {
+        console.error(e);
+        alert(e.message);
+    } finally {
+        setGenerating(false);
+    }
   };
 
-  const handleGenerateImages = async () => {
-      // Similar to WordManager but for phrases
-      // We can use a different prompt style for scenes.
-      if (!confirm(`Generate images for ${previewPhrases.length} phrases?`)) return;
-      
-      setGenerating(true);
-      setError(null);
-      const updatedPhrases = [...previewPhrases];
-      
-      for (let i = 0; i < updatedPhrases.length; i++) {
-          const p = updatedPhrases[i];
-          setGenProgress(`Generating for "${p.dutch}"...`);
-          try {
-              const seed = Math.random().toString(36).substr(2, 5);
-              const prompt = `Scene illustrating: "${p.german}". Context: ${p.dutch}. Simple, colorful, vector art style. Variation: ${seed}`;
-              const imgData = await generateImage(prompt);
-              updatedPhrases[i] = { ...p, image: imgData };
-              setPreviewPhrases([...updatedPhrases]); // Update preview
-          } catch (e) {
-              console.error(e);
-          }
-      }
-      setGenerating(false);
-      setGenProgress('');
+  const handleDelete = async (index) => {
+    const w = phrases[index];
+    if (!confirm(`Delete phrase "${w.dutch}"?`)) return;
+
+    // Find index in main words array
+    const mainIndex = words.findIndex(word => word.id === w.id);
+    if (mainIndex === -1) return;
+
+    const newWords = words.filter((_, i) => i !== mainIndex);
+    await saveWords(newWords);
+    onWordsChange(newWords);
   };
+
+  const speakText = (text, lang) => {
+      if (!window.speechSynthesis) return;
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = lang === 'german' ? 'de-DE' : 'nl-NL';
+      utterance.rate = 0.7; // Slower speech
+      const voices = window.speechSynthesis.getVoices();
+      const voice = voices.find(v => v.lang.startsWith(utterance.lang));
+      if (voice) utterance.voice = voice;
+      window.speechSynthesis.speak(utterance);
+  };
+
+  const phrases = words.filter(w => w.type === 'phrase');
 
   return html`
     <div className="il-word-manager">
@@ -236,6 +267,66 @@ export const PhraseManager = ({ words, onWordsChange }) => {
             `}
         </div>
       `}
+
+      <div className="il-section-title" style=${{marginTop: '24px'}}>
+          Your Phrases (${phrases.length})
+      </div>
+      
+      <div className="il-word-list">
+        ${phrases.map((w, i) => {
+            return html`
+                <div key=${w.id} className="il-word-row">
+                    ${w.image ? html`
+                        <img 
+                            src=${w.image} 
+                            className="il-word-img-preview" 
+                            title="Phrase Image"
+                        />
+                    ` : html`
+                        <div className="il-word-img-preview" style=${{display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#475569'}}>
+                            <${ImageIcon} size=${16} />
+                        </div>
+                    `}
+                    
+                    <div className="il-word-pair">
+                        <div style=${{display: 'flex', alignItems: 'center', gap: '4px'}}>
+                            <span>${w.emoji} ${w.german}</span>
+                            <button className="il-icon-btn-sm" style=${{border: 'none', background: 'transparent', padding: 2}} onClick=${() => speakText(w.german, 'german')}>
+                                <${Volume2} size=${14} />
+                            </button>
+                        </div>
+                        <span style=${{color: '#64748b', margin: '0 4px'}}>→</span>
+                        <div style=${{display: 'flex', alignItems: 'center', gap: '4px'}}>
+                            <span>${w.dutch}</span>
+                            <button className="il-icon-btn-sm" style=${{border: 'none', background: 'transparent', padding: 2}} onClick=${() => speakText(w.dutch, 'dutch')}>
+                                <${Volume2} size=${14} />
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div className="il-word-actions">
+                        <button 
+                            className="il-icon-btn-sm" 
+                            onClick=${() => handleRegenerate(i)}
+                            title="Regenerate Image"
+                            disabled=${generating}
+                        >
+                            ${generating ? html`<${Spinner} size=${14} />` : html`<${RefreshCw} size=${14} />`}
+                        </button>
+                        <button 
+                            className="il-icon-btn-sm" 
+                            onClick=${() => handleDelete(i)}
+                            title="Delete Phrase"
+                            disabled=${generating}
+                            style=${{color: '#ef4444'}}
+                        >
+                            <${Trash2} size=${14} />
+                        </button>
+                    </div>
+                </div>
+            `;
+        })}
+      </div>
     </div>
   `;
 };

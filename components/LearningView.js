@@ -33,6 +33,7 @@ export const LearningView = ({ words, wordProgress, credits, streak, direction, 
       // If direction is German->Dutch, question is German (de-DE)
       // If direction is Dutch->German, question is Dutch (nl-NL)
       utterance.lang = lang === 'german' ? 'de-DE' : 'nl-NL';
+      utterance.rate = 0.7; // Slower speech
       
       // Try to find a good voice
       const voices = window.speechSynthesis.getVoices();
