@@ -148,6 +148,44 @@ export const PhraseManager = ({ words, onWordsChange, speechRate }) => {
     setPreviewPhrases(phrases);
   };
 
+  const handleGenerateImages = async () => {
+      if (previewPhrases.length === 0) return;
+      
+      setGenerating(true);
+      setError(null);
+      
+      const updatedPhrases = [...previewPhrases];
+      
+      for (let i = 0; i < updatedPhrases.length; i++) {
+          if (!updatedPhrases[i].image) {
+              try {
+                  const seed = Math.random().toString(36).substr(2, 5);
+                  const prompt = `Scene illustrating: "${updatedPhrases[i].german}". Context: ${updatedPhrases[i].dutch}. Simple, colorful, vector art style. Variation: ${seed}`;
+                  const imgData = await generateImage(prompt);
+                  updatedPhrases[i] = { ...updatedPhrases[i], image: imgData };
+                  setPreviewPhrases([...updatedPhrases]);
+              } catch (e) {
+                  console.error("Failed to generate image for preview phrase", e);
+                  // Continue with other phrases even if one fails
+              }
+          }
+      }
+      
+      setGenerating(false);
+  };
+
+  const handleImport = () => {
+      if (previewPhrases.length > 0) {
+          const combined = [...words, ...previewPhrases];
+          saveWords(combined);
+          onWordsChange(combined);
+          setImportText('');
+          setPreviewPhrases([]);
+          setShowImport(false);
+          alert(`Added ${previewPhrases.length} phrases!`);
+      }
+  };
+
   const handleRegenerate = async (index) => {
     const w = phrases[index];
     if (!confirm(`Regenerate image for "${w.dutch}"?`)) return;
@@ -188,6 +226,22 @@ export const PhraseManager = ({ words, onWordsChange, speechRate }) => {
     onWordsChange(newWords);
   };
 
+  const handleConnect = async () => {
+      if (window.aistudio && window.aistudio.openSelectKey) {
+          try {
+              await window.aistudio.openSelectKey();
+              // Clear error after successful connection attempt
+              setError(null);
+              alert("Key selected! Try generating again.");
+          } catch (e) {
+              console.error("Failed to select key", e);
+              alert("Failed to select key: " + e.message);
+          }
+      } else {
+          alert("API Key selection is not available in this environment.");
+      }
+  };
+
   const speakText = (text, lang) => {
       if (!window.speechSynthesis) return;
       window.speechSynthesis.cancel();
@@ -209,6 +263,29 @@ export const PhraseManager = ({ words, onWordsChange, speechRate }) => {
             ${showImport ? 'Hide Import' : 'Import Phrases'}
         </button>
       </div>
+
+      ${error && html`
+        <div style=${{padding: '12px', marginBottom: '12px', borderRadius: '8px', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#fca5a5', fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '8px'}}>
+            <div><strong>Error:</strong> ${error}</div>
+            ${(error.includes('API Key') || error.includes('403')) && html`
+                <button 
+                    onClick=${handleConnect}
+                    style=${{
+                        padding: '6px 12px', 
+                        background: '#ef4444', 
+                        color: 'white', 
+                        border: 'none', 
+                        borderRadius: '4px', 
+                        cursor: 'pointer',
+                        alignSelf: 'flex-start',
+                        fontWeight: '600'
+                    }}
+                >
+                    Connect Google Account
+                </button>
+            `}
+        </div>
+      `}
 
       ${showImport && html`
         <div className="il-import-box">
