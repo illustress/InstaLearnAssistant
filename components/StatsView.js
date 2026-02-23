@@ -1,7 +1,7 @@
 import { React } from '../deps.js';
 import { html } from '../utils.js';
 
-export const StatsView = ({ credits, streak, wordProgress, words }) => {
+export const StatsView = ({ credits, streak, timeSpent, wordProgress, words }) => {
   // Calculate mastery
   const totalWords = words.length;
   const levels = { 1: 0, 2: 0, 3: 0, 4: 0 };
@@ -12,6 +12,15 @@ export const StatsView = ({ credits, streak, wordProgress, words }) => {
   
   // Implicitly level 1 for words without progress entry
   levels[1] += (totalWords - Object.keys(wordProgress).length);
+
+  // Format time spent
+  const formatTime = (seconds) => {
+      if (!seconds) return "0m";
+      const h = Math.floor(seconds / 3600);
+      const m = Math.floor((seconds % 3600) / 60);
+      if (h > 0) return `${h}h ${m}m`;
+      return `${m}m`;
+  };
 
   return html`
     <div className="il-stats-view">
@@ -25,8 +34,8 @@ export const StatsView = ({ credits, streak, wordProgress, words }) => {
                 <div className="il-stat-label">Streak</div>
             </div>
             <div className="il-stat-card">
-                <div className="il-stat-value">${totalWords}</div>
-                <div className="il-stat-label">Words</div>
+                <div className="il-stat-value">${formatTime(timeSpent)}</div>
+                <div className="il-stat-label">Time Spent</div>
             </div>
             <div className="il-stat-card">
                 <div className="il-stat-value">${Math.round((levels[4] / totalWords) * 100)}%</div>

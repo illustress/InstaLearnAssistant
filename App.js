@@ -26,6 +26,7 @@ const App = () => {
   const [wordProgress, setWordProgress] = useState({});
   const [credits, setCredits] = useState(0);
   const [streak, setStreak] = useState(0);
+  const [timeSpent, setTimeSpent] = useState(0);
   const [direction, setDirection] = useState('german-to-dutch');
   const [correctAction, setCorrectAction] = useState('next');
   const [speechRate, setSpeechRate] = useState(0.7);
@@ -33,8 +34,8 @@ const App = () => {
   const [loaded, setLoaded] = useState(false);
 
   // Refs for stable callback
-  const stateRef = useRef({ wordProgress, credits, streak });
-  useEffect(() => { stateRef.current = { wordProgress, credits, streak }; });
+  const stateRef = useRef({ wordProgress, credits, streak, timeSpent });
+  useEffect(() => { stateRef.current = { wordProgress, credits, streak, timeSpent }; });
 
   // Load persisted data on mount
   useEffect(() => {
@@ -47,6 +48,7 @@ const App = () => {
       setWordProgress(data.wordProgress);
       setCredits(data.credits);
       setStreak(data.streak);
+      setTimeSpent(data.timeSpent || 0);
       setDirection(data.direction);
       setCorrectAction(data.correctAction);
       setSpeechRate(data.speechRate || 0.7);
@@ -61,12 +63,14 @@ const App = () => {
     const newWP = updates.wordProgress !== undefined ? updates.wordProgress : cur.wordProgress;
     const newCredits = updates.credits !== undefined ? updates.credits : cur.credits;
     const newStreak = updates.streak !== undefined ? updates.streak : cur.streak;
+    const newTimeSpent = updates.timeSpent !== undefined ? updates.timeSpent : cur.timeSpent;
 
     if (updates.wordProgress !== undefined) setWordProgress(updates.wordProgress);
     if (updates.credits !== undefined) setCredits(updates.credits);
     if (updates.streak !== undefined) setStreak(updates.streak);
+    if (updates.timeSpent !== undefined) setTimeSpent(updates.timeSpent);
 
-    saveProgress(newWP, newCredits, newStreak);
+    saveProgress(newWP, newCredits, newStreak, newTimeSpent);
   }, []);
 
   const handleWordsChange = useCallback((newWords, opts) => {
@@ -79,7 +83,8 @@ const App = () => {
       setWordProgress({});
       setCredits(0);
       setStreak(0);
-      saveProgress({}, 0, 0);
+      setTimeSpent(0);
+      saveProgress({}, 0, 0, 0);
     }
   }, []);
 
@@ -93,6 +98,8 @@ const App = () => {
       setWordProgress({});
       setCredits(0);
       setStreak(0);
+      setTimeSpent(0);
+      saveProgress({}, 0, 0, 0);
     }
   }, []);
 
@@ -133,6 +140,7 @@ const App = () => {
               words=${words} wordProgress=${wordProgress}
               credits=${credits} streak=${streak} direction=${direction}
               correctAction=${correctAction} speechRate=${speechRate} autoPlayAudio=${autoPlayAudio}
+              timeSpent=${timeSpent}
               onUpdateState=${handleUpdateState} />
           </div>
         ` : null}
@@ -156,7 +164,7 @@ const App = () => {
         ${tab === 'stats' ? html`
           <div className="tab-content">
             <${StatsView}
-              credits=${credits} streak=${streak}
+              credits=${credits} streak=${streak} timeSpent=${timeSpent}
               wordProgress=${wordProgress} words=${words} />
           </div>
         ` : null}

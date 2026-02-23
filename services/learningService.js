@@ -58,6 +58,7 @@ export const loadLearningData = async () => {
           : DEFAULT_WORDS,
       credits: sync.credits || 0,
       streak: sync.streak || 0,
+      timeSpent: sync.timeSpent || 0,
       direction: sync.direction || "german-to-dutch",
       correctAction: sync.correctAction || "next",
       speechRate: sync.speechRate || 0.7,
@@ -104,6 +105,7 @@ export const loadLearningData = async () => {
       words: wordsWithIds,
       credits: progressData.credits || 0,
       streak: progressData.streak || 0,
+      timeSpent: progressData.timeSpent || 0,
       direction: settingsData.direction || "german-to-dutch",
       correctAction: settingsData.correctAction || "next",
       speechRate: settingsData.speechRate || 0.7,
@@ -116,6 +118,7 @@ export const loadLearningData = async () => {
       words: DEFAULT_WORDS,
       credits: 0,
       streak: 0,
+      timeSpent: 0,
       direction: "german-to-dutch",
       correctAction: "next",
       speechRate: 0.7,
@@ -124,15 +127,15 @@ export const loadLearningData = async () => {
   }
 };
 
-export const saveProgress = async (wordProgress, credits, streak) => {
+export const saveProgress = async (wordProgress, credits, streak, timeSpent) => {
   const storage = getStorage();
   if (storage && storage.local) {
     storage.local.set({ wordProgress });
-    if (storage.sync) storage.sync.set({ credits, streak });
+    if (storage.sync) storage.sync.set({ credits, streak, timeSpent });
   } else {
     localStorage.setItem(
       STORAGE_KEY_PROGRESS,
-      JSON.stringify({ wordProgress, credits, streak }),
+      JSON.stringify({ wordProgress, credits, streak, timeSpent }),
     );
   }
 };

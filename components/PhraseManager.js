@@ -3,6 +3,7 @@ const { useState } = React;
 import { html } from '../utils.js';
 import { saveWords } from '../services/learningService.js';
 import { generateImage } from '../services/geminiService.js';
+import { DEFAULT_WORDS } from '../words.js';
 import { Image as ImageIcon, Loader2, RefreshCw, Square, Trash2, Volume2 } from 'https://esm.sh/lucide-react@0.263.1?deps=react@18.2.0';
 import { Spinner } from './WordManager.js';
 
@@ -186,6 +187,16 @@ export const PhraseManager = ({ words, onWordsChange, speechRate }) => {
       }
   };
 
+  const handleReset = () => {
+      if (confirm('Reset all phrases to default? This will remove your custom phrases and their progress.')) {
+          const nonPhrases = words.filter(w => w.type !== 'phrase');
+          const defaultPhrases = DEFAULT_WORDS.filter(w => w.type === 'phrase');
+          const combined = [...nonPhrases, ...defaultPhrases];
+          saveWords(combined);
+          onWordsChange(combined, { resetProgress: true });
+      }
+  };
+
   const handleRegenerate = async (index) => {
     const w = phrases[index];
     if (!confirm(`Regenerate image for "${w.dutch}"?`)) return;
@@ -262,6 +273,7 @@ export const PhraseManager = ({ words, onWordsChange, speechRate }) => {
         <button className="il-file-btn" onClick=${() => setShowImport(!showImport)}>
             ${showImport ? 'Hide Import' : 'Import Phrases'}
         </button>
+        <button className="il-reset-btn" onClick=${handleReset}>Reset All</button>
       </div>
 
       ${error && html`

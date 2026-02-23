@@ -3,7 +3,7 @@ const { useState, useEffect, useRef } = React;
 import { html } from '../utils.js';
 import { Volume2 } from 'https://esm.sh/lucide-react@0.263.1?deps=react@18.2.0';
 
-export const LearningView = ({ words, wordProgress, credits, streak, direction, correctAction, speechRate, autoPlayAudio, onUpdateState }) => {
+export const LearningView = ({ words, wordProgress, credits, streak, direction, correctAction, speechRate, autoPlayAudio, timeSpent, onUpdateState }) => {
   const [currentWord, setCurrentWord] = useState(null);
   const [options, setOptions] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -11,6 +11,7 @@ export const LearningView = ({ words, wordProgress, credits, streak, direction, 
   const [popupImg, setPopupImg] = useState(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const wordsLengthRef = useRef(words?.length || 0);
+  const questionStartTimeRef = useRef(Date.now());
 
   useEffect(() => {
     // Only auto-reset if words list length changed or direction changed
@@ -82,6 +83,7 @@ export const LearningView = ({ words, wordProgress, credits, streak, direction, 
     setOptions(allOptions);
     setSelected(null);
     setResult(null);
+    questionStartTimeRef.current = Date.now();
   };
 
   const handleAnswer = (option) => {
@@ -90,6 +92,10 @@ export const LearningView = ({ words, wordProgress, credits, streak, direction, 
     
     const isCorrect = option.id === currentWord.id;
     setResult(isCorrect ? 'correct' : 'wrong');
+
+    // Calculate time spent on this question
+    const timeTaken = Math.floor((Date.now() - questionStartTimeRef.current) / 1000); // in seconds
+    const newTimeSpent = (timeSpent || 0) + timeTaken;
 
     // Update stats
     const newStreak = isCorrect ? streak + 1 : 0;
@@ -115,7 +121,8 @@ export const LearningView = ({ words, wordProgress, credits, streak, direction, 
     onUpdateState({
         streak: newStreak,
         credits: newCredits,
-        wordProgress: updatedProgress
+        wordProgress: updatedProgress,
+        timeSpent: newTimeSpent
     });
 
     if (isCorrect && correctAction === 'next') {
